@@ -14,6 +14,8 @@ public class ConvertFile {
 	public static File fromOracleToMySql(File oracle) {
 		File mysql = new File(oracle.getPath()+MYSQL_EXTENSION);
 		
+		
+		
 		return mysql;
 	}
 }
