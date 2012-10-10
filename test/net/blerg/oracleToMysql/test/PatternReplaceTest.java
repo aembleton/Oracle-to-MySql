@@ -9,7 +9,7 @@ public class PatternReplaceTest {
 
 	@Test
 	public void basicReplace() {
-		assertEquals("Hello 'World'", PatternReplace.replace("Hello World", "Hello *", "Hello '*'", '*', '\\', true));
+		assertEquals("Hello 'World'", PatternReplace.replace("Hello World", "Hello *", "Hello '*'"));
 	}
 	
 	@Test

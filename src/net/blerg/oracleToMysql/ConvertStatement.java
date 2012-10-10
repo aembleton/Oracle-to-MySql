@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.google.common.collect.Multimap;
+
 import net.blerg.oracleToMysql.util.PatternReplace;
 
 /**
@@ -24,16 +26,19 @@ public class ConvertStatement {
 		replacements.put("GRANT CREATE ANY VIEW TO *;", "GRANT CREATE VIEW ON \\*.\\* TO *;");
 		replacements.put("* varchar2(*", "* varchar(*");
 		
-		String mysqlStatement="";
+		String mysqlStatement=statement;
 		
 		for (Entry<String, String> replacement:replacements.entrySet()) {
 			
 			try {
-			mysqlStatement=PatternReplace.replace(statement, replacement.getKey(), replacement.getValue());
-			break;
+			mysqlStatement=PatternReplace.replace(mysqlStatement, replacement.getKey(), replacement.getValue());
 			}catch (Exception e) {
 				//continue to next line
 			}
+		}
+		
+		if (mysqlStatement.equals(statement)) {
+			mysqlStatement="";
 		}
 		
 		return mysqlStatement;
