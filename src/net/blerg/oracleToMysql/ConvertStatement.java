@@ -20,7 +20,9 @@ public class ConvertStatement {
 	 */
 	public static String fromOracleToMySql(String statement) {
 		Map<String,String> replacements=new HashMap<String, String>();
-		replacements.put("CREATE USER * BY *;", "CREATE USER '*' IDENTIFIED BY '*';");
+		replacements.put("CREATE USER * IDENTIFIED BY *;", "CREATE USER '*' IDENTIFIED BY '*';");
+		replacements.put("GRANT CREATE ANY VIEW TO *;", "GRANT CREATE VIEW ON \\*.\\* TO *;");
+		replacements.put("* varchar2(*", "* varchar(*");
 		
 		String mysqlStatement="";
 		

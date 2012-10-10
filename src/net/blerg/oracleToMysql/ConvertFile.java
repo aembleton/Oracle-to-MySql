@@ -34,12 +34,13 @@ public class ConvertFile {
 			if (line.startsWith("--")) {
 				// this is a comment
 				mysqlLines.add(PatternReplace.replace(line, "--*", "-- *"));
-			}
-			line = line.trim();
-			statement.append(line);
-			if (line.endsWith(";")) {
-				mysqlLines.add(ConvertStatement.fromOracleToMySql(statement.toString()));
-				statement = new StringBuffer();
+			} else {
+				line = line.trim();
+				statement.append(line);
+				if (line.endsWith(";")) {
+					mysqlLines.add(ConvertStatement.fromOracleToMySql(statement.toString()));
+					statement = new StringBuffer();
+				}
 			}
 		}
 

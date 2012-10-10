@@ -11,4 +11,9 @@ public class PatternReplaceTest {
 	public void basicReplace() {
 		assertEquals("Hello 'World'", PatternReplace.replace("Hello World", "Hello *", "Hello '*'", '*', '\\', true));
 	}
+	
+	@Test
+	public void usingEscape() {
+		assertEquals("Hello * 'World'", PatternReplace.replace("Hello World", "Hello *", "Hello \\* '*'"));
+	}
 }
