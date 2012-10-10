@@ -4,26 +4,65 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class PatternReplace {
-
-	private static enum STATE {normal,};
+	
+	public static String replace (String string, String pattern, String replacement) {
+		return replace(string,pattern,replacement,'*','\\',true);
+	}
 	
 	public static String replace (String string, String pattern, String replacement, char wildcard, char escapeChar, boolean ignoreCase) {
-	
-		StringBuffer result = new StringBuffer();
 		
 		//tokenise against the pattern
 		List<String> tokenisedPattern = tokenise(pattern, wildcard, escapeChar, true);
 		List<String> tokenisedReplacement = tokenise(replacement,wildcard,escapeChar,true);
 		
+		List<String> replacements = replacements(string, tokenisedPattern, wildcard,ignoreCase);
 		
+		return replaceTokens(tokenisedReplacement, replacements, wildcard);
+	}
+	
+	private static String replaceTokens(List<String> tokenisedReplacement,List<String> replacements,char wildcard) {
+		StringBuffer result = new StringBuffer();
+		int i=0;
+		
+		for (String replacementPattern:tokenisedReplacement) {
+			if (replacementPattern.equals(String.valueOf(wildcard)) && replacements.size()>i) {
+				result.append(replacements.get(i));
+				i++;
+			}else {
+				result.append(replacementPattern);
+			}
+		}
 		
 		return result.toString();
 	}
 	
-	private static List<String> replacements(String string,List<String> pattern, char wildcard){
-		List<String> replacements = new LinkedList<>();
+	private static List<String> replacements(String string,List<String> pattern, char wildcard,boolean ignoreCase){
+		return replacements(string, pattern, wildcard, new LinkedList<String>(),ignoreCase);
+	}
+	
+	private static List<String> replacements(String string,List<String> pattern, char wildcard, List<String> replacements, boolean ignoreCase){
 		
-		for (String )
+		if (pattern.size()>0 && string.length()>0) {
+			String patternElement = pattern.get(0);
+			if (patternElement.equals(String.valueOf(wildcard))) {
+				if (pattern.size()>1) {
+					int index = string.indexOf(pattern.get(1));
+					replacements.add(string.substring(0,index));
+					string = string.substring(index);
+				} else {
+					replacements.add(string);
+					string="";
+				}
+			}else if ((ignoreCase && patternElement.equalsIgnoreCase(string.substring(0,patternElement.length()))) || patternElement.equals(string.substring(0,patternElement.length()))) {
+				string=string.substring(patternElement.length());
+			} else {
+				throw new IllegalArgumentException();
+			}
+			
+			pattern=pattern.subList(1, pattern.size());
+			
+			replacements = replacements(string,pattern,wildcard,replacements,ignoreCase);
+		}
 		
 		return replacements;
 	}

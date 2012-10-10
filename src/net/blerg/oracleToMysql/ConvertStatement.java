@@ -1,18 +1,39 @@
 package net.blerg.oracleToMysql;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import net.blerg.oracleToMysql.util.PatternReplace;
+
 /**
  * Class for carrying out the conversion statement by statement
  * @author Arthur Embleton
  *
  */
 public class ConvertStatement {
-
+	
 	/**
 	 * Converts a statement from Oracle to MySql
 	 * @param statement The Oracle statement to convert
 	 * @return The statement as Mysql
 	 */
 	public static String fromOracleToMySql(String statement) {
-		return "";
+		Map<String,String> replacements=new HashMap<String, String>();
+		replacements.put("CREATE USER * BY *;", "CREATE USER '*' IDENTIFIED BY '*';");
+		
+		String mysqlStatement="";
+		
+		for (Entry<String, String> replacement:replacements.entrySet()) {
+			
+			try {
+			mysqlStatement=PatternReplace.replace(statement, replacement.getKey(), replacement.getValue());
+			break;
+			}catch (Exception e) {
+				//continue to next line
+			}
+		}
+		
+		return mysqlStatement;
 	}
 }
