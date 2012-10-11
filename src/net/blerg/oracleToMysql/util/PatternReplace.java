@@ -4,17 +4,20 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class PatternReplace {
 
 	public static String replace(String string, String pattern, String replacement) {
-		Map<Character,Match> matches = new HashMap<>();
+		Map<Character, Match> matches = new HashMap<>();
 		matches.put('*', new MatchAll());
-		return replace(string, pattern, replacement, matches, '\\', true);
+		return replace(string, pattern, replacement, matches);
 	}
 
-	public static String replace(String string, String pattern, String replacement, Map<Character, Match> matches, char escapeChar, boolean ignoreCase) {
+	public static String replace(String string, String pattern, String replacement, Map<Character, Match> matches) {
+		return replace(string, pattern, replacement, matches, '\\', true, true);
+	}
+
+	public static String replace(String string, String pattern, String replacement, Map<Character, Match> matches, char escapeChar, boolean ignoreCase, boolean loop) {
 
 		// tokenise against the pattern
 		List<String> tokenisedPattern = tokenise(pattern, matches, escapeChar, true);
@@ -22,22 +25,22 @@ public class PatternReplace {
 
 		List<String> replacements;
 		try {
-			replacements = replacements(string, tokenisedPattern, matches, ignoreCase);
+			replacements = replacements(string, tokenisedPattern, matches, ignoreCase, loop);
 		} catch (MatchFailed e) {
-			//return string without carrying out the replacements
+			// return string without carrying out the replacements
 			return string;
 		}
 
 		return replaceTokens(tokenisedReplacement, replacements, matches);
 	}
 
-	private static String replaceTokens(List<String> tokenisedReplacement, List<String> replacements, Map<Character,Match> matches) {
+	private static String replaceTokens(List<String> tokenisedReplacement, List<String> replacements, Map<Character, Match> matches) {
 		StringBuffer result = new StringBuffer();
 		int i = 0;
 
 		for (String replacementPattern : tokenisedReplacement) {
 			char c = replacementPattern.charAt(0);
-			if (replacementPattern.length()==1 && matches.containsKey(c) && replacements.size() > i) {
+			if (replacementPattern.length() == 1 && matches.containsKey(c) && replacements.size() > i) {
 				result.append(replacements.get(i));
 				i++;
 			} else {
@@ -48,16 +51,26 @@ public class PatternReplace {
 		return result.toString();
 	}
 
-	private static List<String> replacements(String string, List<String> pattern, Map<Character, Match> matches, boolean ignoreCase) throws MatchFailed {
-		return replacements(string, pattern, matches, new LinkedList<String>(), ignoreCase);
+	private static List<String> replacements(String string, List<String> pattern, Map<Character, Match> matches, boolean ignoreCase, boolean loop) throws MatchFailed {
+		
+		List<String> result = replacements(string, pattern, matches, new LinkedList<String>(), ignoreCase);
+		int previousResultSize=0;
+		
+		while(loop&&result.size()>previousResultSize&&result.size()>1) {
+			result.addAll(replacements(result.get(result.size()-1), pattern, matches, new LinkedList<String>(), ignoreCase));
+			previousResultSize=result.size();
+		}
+		
+		return result;
 	}
 
-	private static List<String> replacements(String string, List<String> pattern, Map<Character, Match> matches, List<String> replacements, boolean ignoreCase) throws MatchFailed {
+	private static List<String> replacements(String string, List<String> pattern, Map<Character, Match> wildcards, List<String> replacements, boolean ignoreCase) throws MatchFailed {
 
 		if (pattern.size() > 0 && string.length() > 0) {
 			String patternElement = pattern.get(0);
 			char c = patternElement.charAt(0);
-			if (patternElement.length() == 1 && matches.containsKey(c)) {
+			if (patternElement.length() == 1 && wildcards.containsKey(c)) {
+				//this is one of the wildcard chars
 				String replacementString = "";
 				if (pattern.size() > 1) {
 					// there are more items remaining in the pattern, so need to take an indexof to the next match
@@ -70,12 +83,12 @@ public class PatternReplace {
 				}
 
 				replacements.add(replacementString);
-				
-				if(!matches.get(c).matches(replacementString)) {
-					//could not match
+
+				if (!wildcards.get(c).matches(replacementString)) {
+					// could not match
 					throw new MatchFailed();
 				}
-				
+
 			} else if ((ignoreCase && patternElement.equalsIgnoreCase(string.substring(0, patternElement.length()))) || patternElement.equals(string.substring(0, patternElement.length()))) {
 				string = string.substring(patternElement.length());
 			} else {
@@ -84,7 +97,7 @@ public class PatternReplace {
 
 			pattern = pattern.subList(1, pattern.size());
 
-			replacements = replacements(string, pattern, matches, replacements, ignoreCase);
+			replacements = replacements(string, pattern, wildcards, replacements, ignoreCase);
 		}
 
 		return replacements;
